@@ -2,43 +2,22 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Print every env var that starts with MYSQL for debugging
-const mysqlVars = Object.keys(process.env).filter(k => k.startsWith('MYSQL') || k.startsWith('DB_'));
-console.log('Available DB vars:', mysqlVars);
-mysqlVars.forEach(k => {
-  if (!k.includes('PASSWORD') && !k.includes('ROOT')) {
-    console.log(`  ${k} = ${process.env[k]}`);
-  }
-});
+// Get connection details - try all possible variable names
+const MYSQL_URL = process.env.MYSQL_URL || 
+                  process.env.DATABASE_URL ||
+                  null;
 
-// Try every possible variable name Railway might use
-const host     = process.env.MYSQLHOST     || process.env.MYSQL_HOST     || process.env.DB_HOST     || 'localhost';
-const port     = process.env.MYSQLPORT     || process.env.MYSQL_PORT     || process.env.DB_PORT     || 3306;
-const user     = process.env.MYSQLUSER     || process.env.MYSQL_USER     || process.env.DB_USER     || 'root';
-const password = process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.DB_PASSWORD || '';
-const database = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || process.env.MYSQL_DBNAME || process.env.DB_NAME || 'railway';
+const host     = process.env.DB_HOST     || process.env.MYSQLHOST     || 'localhost';
+const port     = process.env.DB_PORT     || process.env.MYSQLPORT     || 3306;
+const user     = process.env.DB_USER     || process.env.MYSQLUSER     || 'root';
+const password = process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || process.env.MYSQL_ROOT_PASSWORD || '';
+const database = process.env.DB_NAME     || process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'hungry_brunch';
 
-console.log(`Connecting to: ${user}@${host}:${port}/${database}`);
+console.log('🔌 DB connecting to:', MYSQL_URL ? 'URL string' : `${user}@${host}:${port}/${database}`);
 
-// If MYSQL_URL is available use that — it's the most reliable
-let pool;
-
-if (process.env.MYSQL_URL) {
-  console.log('Using MYSQL_URL connection string');
-  pool = mysql.createPool(process.env.MYSQL_URL + '?ssl={"rejectUnauthorized":false}');
-} else {
-  console.log('Using individual connection variables');
-  pool = mysql.createPool({
-    host,
-    port:               parseInt(port),
-    user,
-    password,
-    database,
-    waitForConnections: true,
-    connectionLimit:    10,
-    ssl:                { rejectUnauthorized: false },
-  });
-}
+const pool = MYSQL_URL
+  ? mysql.createPool({ uri: MYSQL_URL, ssl: { rejectUnauthorized: false }, connectionLimit: 10 })
+  : mysql.createPool({ host, port: parseInt(port), user, password, database, connectionLimit: 10, waitForConnections: true });
 
 const testConnection = async () => {
   try {
