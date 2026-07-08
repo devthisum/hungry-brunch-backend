@@ -12,11 +12,12 @@ router.get('/', authMiddleware, async (req, res) => {
     const [[avgRating]] = await pool.query('SELECT AVG(rating) as avg FROM reviews');
     const [[categoryCount]] = await pool.query('SELECT COUNT(*) as count FROM categories');
     const [[galleryCount]] = await pool.query('SELECT COUNT(*) as count FROM gallery');
+    const [[newReservations]] = await pool.query("SELECT COUNT(*) as count FROM reservations WHERE status = 'new'");
+    const [[totalReservations]] = await pool.query('SELECT COUNT(*) as count FROM reservations');
 
     const [categoryBreakdown] = await pool.query(
       'SELECT category, COUNT(*) as count FROM menu_items GROUP BY category ORDER BY count DESC'
     );
-
     const [ratingDist] = await pool.query(
       'SELECT rating, COUNT(*) as count FROM reviews GROUP BY rating ORDER BY rating DESC'
     );
@@ -30,8 +31,10 @@ router.get('/', authMiddleware, async (req, res) => {
         averageRating: avgRating.avg ? parseFloat(avgRating.avg).toFixed(1) : 0,
         categoryTotal: categoryCount.count,
         galleryTotal: galleryCount.count,
+        newReservations: newReservations.count,
+        totalReservations: totalReservations.count,
         categoryBreakdown,
-        ratingDistribution: ratingDist
+        ratingDistribution: ratingDist,
       }
     });
   } catch (error) {

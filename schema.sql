@@ -148,3 +148,19 @@ INSERT INTO opening_hours (day_name, open_time, close_time, is_closed) VALUES
 ('Friday', '08:00:00', '23:00:00', FALSE),
 ('Saturday', '07:30:00', '23:00:00', FALSE),
 ('Sunday', '07:30:00', '22:00:00', FALSE);
+
+-- ============================================
+-- RESERVATIONS TABLE (added)
+-- ============================================
+CREATE TABLE IF NOT EXISTS reservations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  email VARCHAR(200) NOT NULL,
+  phone VARCHAR(50),
+  date DATE,
+  time TIME,
+  guests INT DEFAULT 2,
+  message TEXT,
+  status ENUM('new', 'confirmed', 'cancelled') DEFAULT 'new',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
